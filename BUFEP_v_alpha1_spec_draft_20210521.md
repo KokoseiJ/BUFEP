@@ -5,15 +5,25 @@ BUFEP v.alpha1 Specification
 `MMMVSSSSIIIIPPOTLLRRD-CCCC`
 
 M: Magic header, \x11 \x03 \x70
+
 V: Protocol Version information, 0 in this spec
+
 S: Shard for identifying requests
+
 I: IP address, used in UDP hole punching
+
 P: UDP Port number, used in UDP hole punching
+
 O: Type of the operation(a.k.a. OPcode)
+
 T: Operation mode(ex. send/recv)
+
 L: Length of the data
+
 R: Reserved header space- could be used or left null depending on the operation.
+
 D: Data, as specified in L. This does not include the length of the checksum
+
 C: Checksum at the last 4 bytes of the data, calculated using Fletcher-32
 
 ```
@@ -37,15 +47,18 @@ C: Checksum at the last 4 bytes of the data, calculated using Fletcher-32
 ```
 
 IP Address and a port number doesn't get changed in the response.
+
 in case of making simultaneous requests in a single machine, A shard will be used to identify each requests.
 Shard should be unique per requests- otherwise it could cause conflicts.
 
 Operation mode can be used to specify the type of the operation, but it can also be used to specify errors-
 such as data loss, authentication request, and errors in a parameter.
-Error types start from 0xA0, and it could be defined by each OP codes.
-Error types starting from 0xE0 are global(OP code independent).
+
+Error types start from `0xA0`, and it could be defined by each OP codes.
+Error types starting from `0xE0` are global(OP code independent).
 
 `0xE0`: Data loss has been occured(Data length Mismatch/Checksum Mismatch), please send a packet again.
+
 `0xE1`: Invalid/Bad Request. I cannot process the data.
 
 Additionally, these modes are being used globally to imply a short reply.
@@ -67,7 +80,9 @@ This OP mode gets sent from a client.
 Requesting to download a file requires 2 informations: base64 encoded filename and its hash.
 
 Data should be a format of `HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHS-`, where:
+
 H: SHA256 hash of a file.
+
 S: base64-encoded filename.
 
 If everything goes honky dory, the server should reply with 0x12.
@@ -79,7 +94,9 @@ This OP mode gets sent from a server.
 Data information contains: a file length, and its SHA256 hash.
 
 Data should be a format of `FFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH`, where:
+
 F: file length
+
 H: SHA256 hash of a file
 
 if a client responds with `0x02`, server should start transferring files.
@@ -99,7 +116,9 @@ This OP mode gets sent from a server.
 Data field has a sequence number- and the actual data stored after it.
 
 Data should be a format of `IIIID-`, where:
+
 I: Sequence number
+
 D: the actual data
 
 when the transfer is finished, Server should send `0x14` to imply that the transfer has been over.
@@ -119,6 +138,7 @@ This OP code doesn't contain any Data.
 This OP mode gets sent from a client.
 
 This implies that the data has been successfully received without any loss.
+
 Connection can be closed after this message has been exchanged.
 
 This OP code doesn't contain any Data.
@@ -130,5 +150,9 @@ This OP mode gets sent from a client.
 If there were corrupt chunks, client should request server to send it over again.
 
 Data should be a format of `NIIII-`, where:
+
 N: The amount of sequence numbers
+
 I: Sequence numbers, each 4 bytes represent single sequence.
+
+
