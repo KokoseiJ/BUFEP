@@ -87,72 +87,12 @@ S: base64-encoded filename.
 
 If everything goes honky dory, the server should reply with 0x12.
 
-### `0x12`: Data information
+### `0x11`: 
 
 This OP mode gets sent from a server.
 
-Data information contains: a file length, and its SHA256 hash.
+This packet
 
-Data should be a format of `FFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH`, where:
+Each packets can contain
 
-F: file length
-
-H: SHA256 hash of a file
-
-if a client responds with `0x02`, server should start transferring files.
-
-### `0x02`: Start the transfer
-
-This OP mode gets sent from a client.
-
-This implies that the client is ready to receive data.
-
-This OP code doesn't contain any Data.
-
-### `0x13`: Transfer
-
-This OP mode gets sent from a server.
-
-Data field has a sequence number- and the actual data stored after it.
-
-Data should be a format of `IIIID-`, where:
-
-I: Sequence number
-
-D: the actual data
-
-when the transfer is finished, Server should send `0x14` to imply that the transfer has been over.
-
-If the client responds with `0x04`, Connection can now be closed, if the client responds with `0xA0`, You should resend the files.
-
-### `0x14`: Transfer finished
-
-This OP mode gets sent from a server.
-
-This implies that the data has been finished transferring.
-
-This OP code doesn't contain any Data.
-
-### `0x04`: Received successfully
-
-This OP mode gets sent from a client.
-
-This implies that the data has been successfully received without any loss.
-
-Connection can be closed after this message has been exchanged.
-
-This OP code doesn't contain any Data.
-
-### `0xA0`: Resend Chunk
-
-This OP mode gets sent from a client.
-
-If there were corrupt chunks, client should request server to send it over again.
-
-Data should be a format of `NIIII-`, where:
-
-N: The amount of sequence numbers
-
-I: Sequence numbers, each 4 bytes represent single sequence.
-
-
+`IIIID-`
