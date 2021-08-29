@@ -1,0 +1,15 @@
+# Main
+
+* dispatcher
+ - runs on the exclusive thread, this one should listen to UDP packets, parse the packet informations, etc etc. After parsing the packet and verifying it's the valid packet data, It could either run the corresponding function on its thread or on a new thread, in which case you should also implement a threshold of existing threads.
+
+
+# Packet
+
+* Packet structure
+ - The structure where you could store its protocol version, IP/port, OP code/mode, Data length, reserved space and the data itself.
+
+* parse_packet(packet)
+ - Function that parses the packet as a Packet structure, and then return. This function should also perform the verification of the magic header, and raise the exception/return null if it's invalid.
+
+* 
