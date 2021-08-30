@@ -107,8 +107,6 @@ Payload format is as follows:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |      Desired Packet Size      |             Pages             |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                              ...                              |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |              ...              |      Filehash (32 bytes)      |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                      Pashhash (32 bytes)                      |
@@ -190,33 +188,31 @@ Payload format is as follows:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                          Page number                          |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                              ...                              |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
 ---
 
 # Requirements
 
-[x] Magic header => \x11 \x03 \x70
+- [x] Magic header => \x11 \x03 \x70
 
-[x] Protocol verson
-
-[x] Client UUID 
-
-[ ] A Way to identify the server reliably
-
-[x] Multiple types of req/res
-
-[ ] Multiple Files?
-
-[x] File name
-
-[x] File size
-
-[x] Password/authentication => sha256
-
-[ ] Encryption
+- [x] Protocol verson
+ 
+- [x] Client UUID 
+ 
+- [ ] A Way to identify the server reliably
+ 
+- [x] Multiple types of req/res
+ 
+- [ ] Multiple Files?
+ 
+- [x] File name
+ 
+- [x] File size
+ 
+- [x] Password/authentication => sha25
+ 
+- [ ] Encryption
 
 
 # Size representation solutions
