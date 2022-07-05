@@ -63,7 +63,7 @@ Size EXCLUDING header
 
 ### Fletcher-32:
 
-4 Bytes of Fletcher-32 checksum calculated from (header EXCLUDING checksum + payload)
+4 Bytes of Fletcher-32 checksum calculated from (header EXCLUDING first 4 bytes AND checksum + payload)
 
 ---
 
@@ -71,13 +71,13 @@ Size EXCLUDING header
 
 ## `0`: Ping/Pong
 
-Server should send back whatever payload the client has sent.
+Used to determine PMTUD and connectivity. No data is required in both request and response.
 
 ## `1`: GetInfo
 
 ### Request
 
-We are using 2 factors to identify files: Filename and Filehash.
+We are using 2 factors to identify a file: Filename and Filehash.
 
 Filehash is SHA256 hash of a file content, and Filename should match with the file that server has.
 
@@ -101,7 +101,7 @@ This is used to dynamically adapt to the appropriate size, removing the theoreti
 
 PassHash is a hashed SHA256 password. It should be 0 if not provided.
 
-Desired Packet Size is used to calculate expected amount of packets, ideal value is Path MTU value. You can use Type 0 Ping/Pong to figure out Path MTU from the client-side using binary search.
+Desired Packet Size is used to calculate expected amount of packets, ideal value is Path MTU value. You can use Type 0 Ping/Pong to figure out Path MTU from the client side using binary search.
 
 ### Response
 
@@ -115,15 +115,11 @@ Payload format is as follows:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                        Pages (8 bytes)                        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                      Filehash (32 bytes)                      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                      Passhash (32 bytes)                      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-Where Pages is amount of packets required to completely transfer a file.
+Where Pages is the amount of packets required to completely transfer a file, which the client should expect to receive in full.
 
-Pages should be calculated as `ceil(file_length / (desired_mtu - header_size))` where header_size is 35(27 + 8 for page indicator).
+Pages should be calculated as `ceil(filesize / (desired_mtu - header_size))` where header_size is 35(27 + 8 for page indicator).
 
 ## `2`: GetData
 
@@ -143,13 +139,13 @@ It is the same as Request Type 1.
 
 ### Response
 
-Client should expect server to send multiple 
+Client should expect server to send multiple packets.
 
 First 8 bytes will be the page number counting from 0, and the rest of the data should be the fragment of file content.
 
 Packet size including the header MUST be matching with the desired packet size unless the page is the last one.
 
-If CRC is mismatching, client can send Error Type 4 to request the malformed page again.
+If the checksum is mismatching or some of the packets appear to be dropped, client can send Error Type 4 to request the malformed page again.
 
 
 # Errors
