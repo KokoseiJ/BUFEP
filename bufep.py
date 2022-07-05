@@ -1,63 +1,73 @@
 import struct
+from uuid import UUID
+from collections import Namedtuple
 
-MAGIC_BYTES = b"\x11\x03\x70"
 BYTEORDER = "little"
 
 
-class UnsupportedVersion(Exception):
-    pass
+def btoi(byte, order=BYTEORDER):
+    int.from_bytes(byte, order)
 
 
-class ChecksumMismatch(Exception):
-    pass
-
-
-def btoi(byte):
-    return int.from_bytes(byte, BYTEORDER)
-
-
-def byte_split(data, size):
+def split_bytes(data, size):
     for i in range(0, len(data), size):
         yield data[i:i+size]
 
 
-def fletcher(datas, bit=16):
-    bytelen = int(bit / 16)
-    threshold = int(2 ** (bit / 2) - 1)
-    #
+def fletcher(data, bit=32):
+    chunk_size = int(bit / 16)
+    mask = 2 ** (bit / 2)
+
     sum1 = 0
     sum2 = 0
-    #
-    for data in datas:
-        assert len(data) == bytelen
-        sum1 = (sum1 + btoi(data)) % threshold
-        sum2 = (sum2 + sum1) % threshold
-    #
-    return (sum2 << (bit / 2)) | sum1
+
+    for chunk in split_bytes(data, chunk_size):
+        sum1 = (sum1 + btoi(chunk)) & mask
+        sum2 = (sum2 + sum1) & mask
+
+    return (sum2 << (chunk_size * 8)) | sum1
 
 
-def check_version(fp):
-    magic = fp.read(4)
-    if magic[:3] != MAGIC_BYTES:
-        return False
-
-    version = btoi(magic[3])
-
-    return version
+class BUFEPError(Exception):
+    pass
 
 
-class ParserV1:
-    HEADER_STRUCT = struct.Struct("<16sBH4s")
+class BUFEPPacketVAlpha3:
+    version = 0
+    magic = b"\x11\x03\x70"
+    packet_struct = "<16sBHI"
+
+    def __init__(self, client_uuid, type_, size, data):
+        self.uuid = UUID(bytes_le=client_uuid)
+        self.type = type_
+        self.size = size
+        self.data = data
 
     @classmethod
-    def parse_header(cls, fp):
-        header = fp.read(23)
+    def from_packetstream(cls, packet):
+        magic = packet.read(3)
+        if magic != cls.magic:
+            raise BUFEPError("Magic Mismatch")
 
-        uuid, type_, size, checksum = cls.HEADER_STRUCT.unpack(header)
+        version = btoi(packet.read(1))
+        if version != cls.version:
+            raise BUFEPError("Version Mismatch")
 
-        data = fp.read(size)
+        header = packet.read(23)
 
-        if fletcher(byte_split(data, 16), 32) != checksum:
-            raise ChecksumMismatch
+        uuid, type_, size, checksum = struct.unpack(header)
 
-        return uuid, type_, data
+        data = packet.read(size)
+        if len(data) != size:
+            raise BUFEPError("Size Mismatch- Payload is smaller than expected")
+        elif packet.read(-1) != 0:
+            raise BUFEPError("Size Mismatch- Payload is bigger than expected")
+
+        checksum_data = header[:-4] + data
+
+        checksum_calc = fletcher(checksum_data, 32)
+
+        if checksum != checksum_calc:
+            raise BUFEPError("Checksum Mismatch")
+
+        return cls(uuid, type_, size, data)
