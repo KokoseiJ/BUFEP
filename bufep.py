@@ -21,12 +21,8 @@ def fletcher(data, bit=32):
     sum2 = 0
 
     for chunk in split_bytes(data, chunk_size):
-        print(chunk)
-        print(btoi(chunk))
         sum1 = (sum1 + btoi(chunk)) % mask
         sum2 = (sum2 + sum1) % mask
-        print(sum1, sum2)
-        print(mask)
 
     return (sum2 << (chunk_size * 8)) | sum1
 
@@ -74,6 +70,3 @@ class BUFEPPacketVAlpha3:
             raise BUFEPError("Checksum Mismatch")
 
         return cls(uuid, type_, size, data)
-
-
-print(hex(fletcher(b"abcdef")))
