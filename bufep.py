@@ -1,11 +1,15 @@
 import struct
-from uuid import UUID
+from uuid import UUID, uuid1
 
 BYTEORDER = "little"
 
 
 def btoi(byte, order=BYTEORDER):
     return int.from_bytes(byte, order)
+
+
+def itob(num, leng=1, order=BYTEORDER):
+    return int.to_bytes(num, leng, order)
 
 
 def split_bytes(data, size):
@@ -34,7 +38,7 @@ class BUFEPError(Exception):
 class BUFEPPacketVAlpha3:
     version = 0
     magic = b"\x11\x03\x70"
-    packet_struct = "<16sBHI"
+    header_struct = "<16sBHI"
 
     def __init__(self, client_uuid, type_, size, data):
         self.uuid = UUID(bytes_le=client_uuid)
@@ -54,12 +58,12 @@ class BUFEPPacketVAlpha3:
 
         header = packet.read(23)
 
-        uuid, type_, size, checksum = struct.unpack(header)
+        uuid, type_, size, checksum = struct.unpack(cls.header_struct, header)
 
         data = packet.read(size)
         if len(data) != size:
             raise BUFEPError("Size Mismatch- Payload is smaller than expected")
-        elif packet.read(-1) != 0:
+        elif len(packet.read(-1)) != 0:
             raise BUFEPError("Size Mismatch- Payload is bigger than expected")
 
         checksum_data = header[:-4] + data
@@ -70,3 +74,27 @@ class BUFEPPacketVAlpha3:
             raise BUFEPError("Checksum Mismatch")
 
         return cls(uuid, type_, size, data)
+
+    def to_packet(self):
+        header = struct.pack(
+            self.header_struct, self.uuid.bytes_le, self.type, self.size, 0)
+        checksum = fletcher(header[:-4] + self.data)
+        header = struct.pack(
+            self.header_struct, self.uuid.bytes_le, self.type, self.size,
+            checksum)
+        return self.magic + itob(self.version) + header + self.data
+
+
+if __name__ == "__main__":
+    with open("testpacket", "wb") as f:
+        uuid = uuid1()
+        print(uuid)
+        packet = BUFEPPacketVAlpha3(uuid.bytes_le, 69, 6, b"zotgay")
+        packetbytes = packet.to_packet()
+        f.write(packetbytes)
+        print('0x' + "".join([hex(x)[2:] for x in packetbytes]))
+
+        from io import BytesIO
+
+        newpacket = BUFEPPacketVAlpha3.from_packetstream(BytesIO(packetbytes))
+        print(newpacket.data)
