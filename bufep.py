@@ -1,12 +1,11 @@
 import struct
 from uuid import UUID
-from collections import Namedtuple
 
 BYTEORDER = "little"
 
 
 def btoi(byte, order=BYTEORDER):
-    int.from_bytes(byte, order)
+    return int.from_bytes(byte, order)
 
 
 def split_bytes(data, size):
@@ -16,14 +15,18 @@ def split_bytes(data, size):
 
 def fletcher(data, bit=32):
     chunk_size = int(bit / 16)
-    mask = 2 ** (bit / 2)
+    mask = int(2 ** (bit / 2)) - 1
 
     sum1 = 0
     sum2 = 0
 
     for chunk in split_bytes(data, chunk_size):
-        sum1 = (sum1 + btoi(chunk)) & mask
-        sum2 = (sum2 + sum1) & mask
+        print(chunk)
+        print(btoi(chunk))
+        sum1 = (sum1 + btoi(chunk)) % mask
+        sum2 = (sum2 + sum1) % mask
+        print(sum1, sum2)
+        print(mask)
 
     return (sum2 << (chunk_size * 8)) | sum1
 
@@ -71,3 +74,6 @@ class BUFEPPacketVAlpha3:
             raise BUFEPError("Checksum Mismatch")
 
         return cls(uuid, type_, size, data)
+
+
+print(hex(fletcher(b"abcdef")))
